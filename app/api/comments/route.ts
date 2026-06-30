@@ -64,18 +64,49 @@ export async function POST(request: Request) {
   }
 }
 
-// DELETE — ลบคอมเมนต์
+// DELETE — ลบคอมเมนต์ (ต้อง login และต้องเป็นเจ้าของคอมเมนต์เท่านั้น)
 export async function DELETE(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const id = searchParams.get("id")
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
 
-  if (!id) {
-    return NextResponse.json({ error: "กรุณาระบุ id" }, { status: 400 })
+    if (!id) {
+      return NextResponse.json({ error: "กรุณาระบุ id" }, { status: 400 })
+    }
+
+    // เช็คว่า login มาไหม
+    const authHeader = request.headers.get("Authorization")
+    if (!authHeader) {
+      return NextResponse.json({ error: "กรุณาเข้าสู่ระบบ" }, { status: 401 })
+    }
+
+    // ถอดรหัส token เพื่อรู้ว่าใครเป็นคนเรียก
+    const token = authHeader.split(" ")[1]
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number }
+
+    // ไปหาคอมเมนต์ตัวจริงในฐานข้อมูลก่อนว่ามีอยู่จริงไหม
+    const comment = await prisma.comment.findUnique({
+      where: { id: Number(id) }
+    })
+
+    if (!comment) {
+      return NextResponse.json({ error: "ไม่พบคอมเมนต์นี้" }, { status: 404 })
+    }
+
+    // เช็คว่าคนที่ขอลบ เป็นเจ้าของคอมเมนต์จริงไหม
+    if (comment.authorId !== decoded.userId) {
+      return NextResponse.json({ error: "คุณไม่มีสิทธิ์ลบคอมเมนต์นี้" }, { status: 403 })
+    }
+
+    // ลบได้แล้ว
+    await prisma.comment.delete({
+      where: { id: Number(id) }
+    })
+
+    return NextResponse.json({ message: "ลบคอมเมนต์สำเร็จ" })
+
+  } catch (error) {
+    console.error("DELETE /api/comments error:", error)
+    return NextResponse.json({ error: "เกิดข้อผิดพลาด" }, { status: 500 })
   }
-
-  await prisma.comment.delete({
-    where: { id: Number(id) }
-  })
-
-  return NextResponse.json({ message: "ลบคอมเมนต์สำเร็จ" })
 }

@@ -35,6 +35,11 @@ export default function PostPage() {
   const [submitting, setSubmitting] = useState(false)
   const [username, setUsername] = useState<string | null>(null)
 
+  // state สำหรับโหมดแก้ไขกระทู้
+  const [isEditing, setIsEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState("")
+  const [editContent, setEditContent] = useState("")
+
   useEffect(() => {
     // เช็คว่า login อยู่ไหม
     setUsername(localStorage.getItem("username"))
@@ -95,7 +100,98 @@ export default function PostPage() {
       setSubmitting(false)
     }
   }
+// ลบคอมเมนต์
+  const handleDeleteComment = async (commentId: number) => {
+    // ถามยืนยันก่อนลบ กันกดพลาด
+    const confirmDelete = confirm("ต้องการลบคอมเมนต์นี้ใช่ไหม?")
+    if (!confirmDelete) return
 
+    try {
+      const token = localStorage.getItem("token")
+      const res = await fetch(`/api/comments?id=${commentId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      })
+
+      if (res.ok) {
+        fetchComments()
+      } else {
+        const data = await res.json()
+        alert(data.error || "ลบไม่สำเร็จ")
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+  // เริ่มโหมดแก้ไข — ดึงค่าปัจจุบันของกระทู้มาใส่ในฟอร์ม
+  const handleStartEdit = () => {
+    if (!post) return
+    setEditTitle(post.title)
+    setEditContent(post.content)
+    setIsEditing(true)
+  }
+
+  // ยกเลิกการแก้ไข
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+  }
+
+  // บันทึกการแก้ไขกระทู้
+  const handleSaveEdit = async () => {
+    if (!editTitle.trim() || !editContent.trim()) {
+      alert("กรุณากรอกชื่อกระทู้และเนื้อหาให้ครบ")
+      return
+    }
+
+    try {
+      const token = localStorage.getItem("token")
+      const res = await fetch(`/api/posts/${postId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title: editTitle, content: editContent }),
+      })
+
+      if (res.ok) {
+        setIsEditing(false) // ออกจากโหมดแก้ไข
+        fetchPost()          // โหลดข้อมูลกระทู้ใหม่ให้ขึ้นค่าที่แก้แล้ว
+      } else {
+        const data = await res.json()
+        alert(data.error || "แก้ไขไม่สำเร็จ")
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  // ลบกระทู้
+  const handleDeletePost = async () => {
+    const confirmDelete = confirm("ต้องการลบกระทู้นี้ใช่ไหม? ลบแล้วกู้คืนไม่ได้")
+    if (!confirmDelete) return
+
+    try {
+      const token = localStorage.getItem("token")
+      const res = await fetch(`/api/posts/${postId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      })
+
+      if (res.ok) {
+        router.push("/") // ลบสำเร็จ พากลับหน้าแรก
+      } else {
+        const data = await res.json()
+        alert(data.error || "ลบไม่สำเร็จ")
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
   // แปลงวันที่เป็นภาษาไทย
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("th-TH", {
@@ -136,24 +232,81 @@ export default function PostPage() {
       {/* กล่องกระทู้ */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
 
-        {/* หมวดหมู่ */}
-        {post.category && (
-          <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-1 rounded-full">
-            {post.category.name}
-          </span>
+        {isEditing ? (
+          // ===== โหมดแก้ไข =====
+          <div>
+            <input
+              type="text"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              placeholder="ชื่อกระทู้"
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-lg font-bold text-gray-900 mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            />
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              placeholder="เนื้อหา"
+              rows={6}
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-900 mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
+            />
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={handleCancelEdit}
+                className="px-4 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-100"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-indigo-700"
+              >
+                บันทึก
+              </button>
+            </div>
+          </div>
+        ) : (
+          // ===== โหมดดูปกติ =====
+          <div>
+            <div className="flex justify-between items-start">
+              {/* หมวดหมู่ */}
+              {post.category && (
+                <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-1 rounded-full">
+                  {post.category.name}
+                </span>
+              )}
+
+              {/* ปุ่มแก้ไข/ลบ — แสดงเฉพาะเจ้าของกระทู้ */}
+              {username === post.author.username && (
+                <div className="flex gap-3 text-xs">
+                  <button
+                    onClick={handleStartEdit}
+                    className="text-indigo-500 hover:text-indigo-700 hover:underline"
+                  >
+                    แก้ไข
+                  </button>
+                  <button
+                    onClick={handleDeletePost}
+                    className="text-red-400 hover:text-red-600 hover:underline"
+                  >
+                    ลบ
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* ชื่อกระทู้ */}
+            <h1 className="text-2xl font-bold text-gray-800 mt-3 mb-2">{post.title}</h1>
+
+            {/* ผู้โพสต์และวันที่ */}
+            <div className="flex gap-4 text-xs text-gray-400 mb-4">
+              <span>👤 {post.author.username}</span>
+              <span>📅 {formatDate(post.createdAt)}</span>
+            </div>
+
+            {/* เนื้อหา */}
+            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+          </div>
         )}
-
-        {/* ชื่อกระทู้ */}
-        <h1 className="text-2xl font-bold text-gray-800 mt-3 mb-2">{post.title}</h1>
-
-        {/* ผู้โพสต์และวันที่ */}
-        <div className="flex gap-4 text-xs text-gray-400 mb-4">
-          <span>👤 {post.author.username}</span>
-          <span>📅 {formatDate(post.createdAt)}</span>
-        </div>
-
-        {/* เนื้อหา */}
-        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{post.content}</p>
 
       </div>
 
@@ -195,9 +348,21 @@ export default function PostPage() {
         <div className="space-y-3">
           {comments.map((comment) => (
             <div key={comment.id} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-              <div className="flex gap-3 text-xs text-gray-400 mb-2">
-                <span>👤 {comment.author.username}</span>
-                <span>📅 {formatDate(comment.createdAt)}</span>
+              <div className="flex justify-between items-start gap-3">
+                <div className="flex gap-3 text-xs text-gray-400 mb-2">
+                  <span>👤 {comment.author.username}</span>
+                  <span>📅 {formatDate(comment.createdAt)}</span>
+                </div>
+
+                {/* ปุ่มลบ — แสดงเฉพาะเจ้าของคอมเมนต์ */}
+                {username === comment.author.username && (
+                  <button
+                    onClick={() => handleDeleteComment(comment.id)}
+                    className="text-xs text-red-400 hover:text-red-600 hover:underline"
+                  >
+                    ลบ
+                  </button>
+                )}
               </div>
               <p className="text-gray-700 text-sm">{comment.content}</p>
             </div>
