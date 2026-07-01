@@ -32,7 +32,10 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
 
   // error เก็บข้อความ error ถ้าดึงข้อมูลไม่สำเร็จ
-  const [error, setError] = useState<string | null>(null)
+ const [error, setError] = useState<string | null>(null)
+
+  // เก็บคำที่พิมพ์ในช่องค้นหา
+  const [search, setSearch] = useState("")
 
   // useEffect รันเมื่อหน้าโหลด — ดึงข้อมูลกระทู้จาก API
   useEffect(() => {
@@ -40,12 +43,11 @@ export default function HomePage() {
   }, [])
 
   // ฟังก์ชันดึงกระทู้จาก API
-  const fetchPosts = async () => {
+  const fetchPosts = async (searchText = "") => {
     try {
-      setLoading(true) // เริ่มโหลด
-
-      // เรียก API GET /api/posts
-      const res = await fetch("/api/posts")
+      setLoading(true)
+      // ถ้ามีคำค้นหา ให้แนบไปกับ URL
+      const res = await fetch(`/api/posts${searchText ? `?search=${searchText}` : ""}`)
 
       // ถ้า API ตอบกลับไม่สำเร็จ ให้ throw error
       if (!res.ok) throw new Error("ดึงข้อมูลไม่สำเร็จ")
@@ -96,7 +98,7 @@ export default function HomePage() {
         <p className="text-red-500 text-lg">{error}</p>
         {/* ปุ่มลองใหม่ */}
         <button
-          onClick={fetchPosts}
+         onClick={() => fetchPosts()}
           className="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700"
         >
           ลองใหม่
@@ -109,7 +111,7 @@ export default function HomePage() {
     <div className="max-w-3xl mx-auto">
 
       {/* หัวข้อหน้า + ปุ่มสร้างกระทู้ */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-gray-800">กระทู้ล่าสุด</h1>
         <Link
           href="/posts/create"
@@ -117,6 +119,33 @@ export default function HomePage() {
         >
           + สร้างกระทู้
         </Link>
+      </div>
+
+      {/* ช่องค้นหากระทู้ */}
+      <div className="flex gap-2 mb-6">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && fetchPosts(search)}
+          placeholder="ค้นหากระทู้..."
+          className="flex-1 border border-gray-200 rounded-lg px-4 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
+        />
+        <button
+          onClick={() => fetchPosts(search)}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700"
+        >
+          ค้นหา
+        </button>
+        {/* ปุ่มล้างคำค้นหา — โชว์เฉพาะตอนมีคำค้น */}
+        {search && (
+          <button
+            onClick={() => { setSearch(""); fetchPosts("") }}
+            className="text-gray-400 px-3 py-2 rounded-lg text-sm hover:bg-gray-100"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {/* ถ้าไม่มีกระทู้เลย */}

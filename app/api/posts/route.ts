@@ -7,10 +7,21 @@ import jwt from "jsonwebtoken"
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
 
-// GET — ดูกระทู้ทั้งหมด
-export async function GET() {
+// GET — ดูกระทู้ทั้งหมด (รองรับค้นหาด้วย ?search=คำที่ค้น)
+export async function GET(request: Request) {
+  // ดึงคำค้นหาจาก URL เช่น /api/posts?search=nextjs
+  const { searchParams } = new URL(request.url)
+  const search = searchParams.get("search") || ""
+
   const posts = await prisma.post.findMany({
     orderBy: { createdAt: "desc" },
+    // ถ้ามีคำค้นหา ให้ filter เฉพาะกระทู้ที่ชื่อหรือเนื้อหาตรง
+    where: search ? {
+      OR: [
+        { title: { contains: search, mode: "insensitive" } },
+        { content: { contains: search, mode: "insensitive" } },
+      ]
+    } : undefined, // ถ้าไม่มีคำค้นหา ดึงทั้งหมดเหมือนเดิม
     include: {
       author: { select: { username: true } },
       category: { select: { name: true } },
