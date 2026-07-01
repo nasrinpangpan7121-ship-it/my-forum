@@ -70,10 +70,13 @@ export default function Navbar() {
                 + สร้างกระทู้
               </Link>
 
-              {/* แสดงชื่อผู้ใช้ */}
-              <span className="text-gray-600 text-sm">
+              {/* แสดงชื่อผู้ใช้ — กดแล้วไปหน้าโปรไฟล์ */}
+              <Link
+                href="/profile"
+                className="text-gray-600 text-sm hover:text-indigo-600"
+              >
                 👤 {username}
-              </span>
+              </Link>
 
               {/* ปุ่ม Logout */}
               <button

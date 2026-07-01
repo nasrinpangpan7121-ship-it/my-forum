@@ -8,13 +8,15 @@ datasource db {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  username  String    @unique
-  email     String    @unique
-  password  String
-  createdAt DateTime  @default(now())
-  posts     Post[]
-  comments  Comment[]
+  id          Int       @id @default(autoincrement())
+  username    String    @unique
+  email       String    @unique
+  password    String
+  displayName String?   // ชื่อที่แสดงในเว็บ รองรับทุกภาษา/อิโมจิ (ไม่บังคับ)
+  profileImage String?  // URL รูปโปรไฟล์ (ไม่บังคับ)
+  createdAt   DateTime  @default(now())
+  posts       Post[]
+  comments    Comment[]
 }
 
 model Category {
