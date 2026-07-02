@@ -56,6 +56,23 @@ export async function POST(request: Request) {
       }
     })
 
+    // ดึงข้อมูลกระทู้เพื่อรู้ว่าเจ้าของกระทู้คือใคร
+    const post = await prisma.post.findUnique({
+      where: { id: Number(postId) },
+      select: { authorId: true, title: true }
+    })
+
+    // สร้าง notification ให้เจ้าของกระทู้ ถ้าคนคอมเมนต์ไม่ใช่เจ้าของกระทู้เอง
+    if (post && post.authorId !== decoded.userId) {
+      await prisma.notification.create({
+        data: {
+          message: `${comment.author.username} คอมเมนต์ในกระทู้ "${post.title}"`,
+          userId: post.authorId,  // ส่งแจ้งเตือนไปให้เจ้าของกระทู้
+          postId: Number(postId), // เก็บ postId ไว้ให้กดไปดูกระทู้ได้
+        }
+      })
+    }
+
     return NextResponse.json(comment, { status: 201 })
 
   } catch (error) {

@@ -15,8 +15,9 @@ model User {
   displayName String?   // ชื่อที่แสดงในเว็บ รองรับทุกภาษา/อิโมจิ (ไม่บังคับ)
   profileImage String?  // URL รูปโปรไฟล์ (ไม่บังคับ)
   createdAt   DateTime  @default(now())
-  posts       Post[]
-  comments    Comment[]
+  posts         Post[]
+  comments      Comment[]
+  notifications Notification[] // การแจ้งเตือนที่ได้รับ
 }
 
 model Category {
@@ -60,4 +61,13 @@ model Comment {
   authorId  Int
   post      Post     @relation(fields: [postId], references: [id])
   postId    Int
+}
+model Notification {
+  id        Int      @id @default(autoincrement())
+  message   String   // ข้อความแจ้งเตือน
+  isRead    Boolean  @default(false) // อ่านแล้วหรือยัง
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id]) // คนที่ได้รับแจ้งเตือน
+  userId    Int
+  postId    Int?     // กระทู้ที่เกี่ยวข้อง (ถ้ามี)
 }
