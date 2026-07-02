@@ -106,10 +106,10 @@ export default function CreatePostPage() {
     <div className="max-w-2xl mx-auto">
 
       {/* หัวข้อหน้า */}
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">สร้างกระทู้ใหม่</h1>
+      <h1 className="text-2xl font-bold mb-6" style={{color: "var(--foreground)"}}>สร้างกระทู้ใหม่</h1>
 
       {/* กล่องฟอร์ม */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="theme-card rounded-2xl shadow-sm border p-6">
 
         {/* แสดง error ถ้ามี */}
         {error && (
@@ -122,7 +122,7 @@ export default function CreatePostPage() {
 
           {/* ช่องกรอกชื่อกระทู้ */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1 theme-muted">
               ชื่อกระทู้ <span className="text-red-500">*</span>
             </label>
             <input
@@ -131,19 +131,19 @@ export default function CreatePostPage() {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="กรอกชื่อกระทู้..."
               required
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              className="w-full border rounded-lg px-4 py-2.5 text-sm theme-input focus:outline-none focus:ring-2 focus:ring-indigo-300"
             />
           </div>
 
           {/* เลือกหมวดหมู่ */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1 theme-muted">
               หมวดหมู่ (ไม่บังคับ)
             </label>
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
+              className="w-full border rounded-lg px-4 py-2.5 text-sm theme-input focus:outline-none focus:ring-2 focus:ring-indigo-300"
             >
               <option value="">-- ไม่ระบุหมวดหมู่ --</option>
               {categories.map((cat) => (
@@ -156,7 +156,7 @@ export default function CreatePostPage() {
 
           {/* ช่องกรอกเนื้อหา */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1 theme-muted">
               เนื้อหา <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -165,7 +165,7 @@ export default function CreatePostPage() {
               placeholder="เขียนเนื้อหากระทู้ที่นี่..."
               required
               rows={8}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
+              className="w-full border rounded-lg px-4 py-2.5 text-sm theme-input focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
             />
           </div>
 
@@ -176,7 +176,7 @@ export default function CreatePostPage() {
             <button
               type="button"
               onClick={() => router.push("/")}
-              className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-lg text-sm hover:bg-gray-50"
+              className="flex-1 border rounded-lg py-2.5 text-sm theme-input hover:opacity-80"
             >
               ยกเลิก
             </button>

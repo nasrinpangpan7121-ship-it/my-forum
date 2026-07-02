@@ -1,21 +1,68 @@
 @import "tailwindcss";
 
+/* ธีมสว่าง (default) */
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --card: #f9fafb;
+  --border: #e5e7eb;
+  --muted: #6b7280;
+}
+
+/* ธีมมืด — ใช้เมื่อเครื่องตั้ง dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a;
+    --foreground: #f1f5f9;
+    --card: #1e293b;
+    --border: #334155;
+    --muted: #94a3b8;
+  }
+}
+
+/* ธีมมืด — ใช้เมื่อผู้ใช้กดสลับเอง */
+:root.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --card: #1e293b;
+  --border: #334155;
+  --muted: #94a3b8;
+}
+
+/* ธีมสว่าง — ใช้เมื่อผู้ใช้กดสลับเอง */
+:root.light {
+  --background: #ffffff;
+  --foreground: #171717;
+  --card: #f9fafb;
+  --border: #e5e7eb;
+  --muted: #6b7280;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
-
-
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background 0.3s, color 0.3s; /* เปลี่ยนธีมแบบ smooth */
+}
+/* Card — กล่องการ์ดต่างๆ */
+.theme-card {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+/* Input — ช่องกรอกข้อมูล */
+.theme-input {
+  background: var(--card);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+/* Text สีรอง */
+.theme-muted {
+  color: var(--muted);
 }

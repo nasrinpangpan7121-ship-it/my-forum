@@ -17,6 +17,33 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [notifications, setNotifications] = useState<{id: number, message: string, isRead: boolean, postId: number | null}[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
+  const [theme, setTheme] = useState<"light" | "dark">("light")
+
+  // โหลดธีมตอนเริ่ม
+  useEffect(() => {
+    // เช็คว่าผู้ใช้เคยเลือกธีมไว้ไหม
+    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null
+
+    if (savedTheme) {
+      // ถ้าเคยเลือกไว้ ใช้ธีมนั้น
+      setTheme(savedTheme)
+      document.documentElement.className = savedTheme
+    } else {
+      // ถ้ายังไม่เคยเลือก ดูจากระบบ
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+      const systemTheme = prefersDark ? "dark" : "light"
+      setTheme(systemTheme)
+      document.documentElement.className = systemTheme
+    }
+  }, [])
+
+  // ฟังก์ชันสลับธีม
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light"
+    setTheme(newTheme)
+    document.documentElement.className = newTheme  // เปลี่ยน class ที่ <html>
+    localStorage.setItem("theme", newTheme)         // บันทึกไว้ให้ครั้งหน้า
+  }
 
   // router ใช้สำหรับพาผู้ใช้ไปหน้าอื่นด้วยโค้ด เช่น router.push("/login")
   const router = useRouter()
@@ -78,7 +105,7 @@ export default function Navbar() {
     // bg-white = พื้นหลังขาว, shadow-sm = เงาเบาๆ ด้านล่าง
     // sticky top-0 = ติดอยู่ด้านบนแม้จะ scroll
     // z-50 = อยู่ด้านบนสุดเสมอ (ไม่โดนของอื่นทับ)
-    <nav className="bg-white shadow-sm sticky top-0 z-50">
+    <nav className="shadow-sm sticky top-0 z-50" style={{background: "var(--card)", borderBottom: "1px solid var(--border)"}}>
 
       {/* container mx-auto = จัดกึ่งกลาง, px-4 = padding ซ้ายขวา */}
       {/* flex = จัดเรียงแนวนอน, items-center = จัดกึ่งกลางแนวตั้ง */}
@@ -86,7 +113,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4 flex items-center justify-between h-16">
 
         {/* ซ้าย: ชื่อเว็บ — กดแล้วไปหน้าแรก */}
-        <Link href="/" className="text-xl font-bold text-indigo-600 hover:text-indigo-800">
+        <Link href="/" className="text-xl font-bold hover:opacity-80" style={{color: theme === "dark" ? "var(--foreground)" : "#4f46e5"}}>
           🗣️ ทดสอบยี๊นยีน
         </Link>
 
@@ -107,6 +134,15 @@ export default function Navbar() {
                 + สร้างกระทู้
               </Link>
 
+              {/* ปุ่มสลับธีม */}
+              <button
+                onClick={toggleTheme}
+                className="text-sm hover:text-indigo-400"
+                style={{color: "var(--foreground)"}}
+              >
+                {theme === "light" ? "🌙" : "☀️"}
+              </button>
+
               {/* ไอคอนกระดิ่งแจ้งเตือน */}
               <div className="relative">
                 <button
@@ -124,9 +160,9 @@ export default function Navbar() {
 
                 {/* dropdown แสดงรายการแจ้งเตือน */}
                 {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50">
-                    <div className="flex justify-between items-center px-4 py-3 border-b border-gray-100">
-                      <span className="font-bold text-gray-800 text-sm">การแจ้งเตือน</span>
+                  <div className="absolute right-0 mt-2 w-80 rounded-xl shadow-lg border z-50 theme-card">
+                    <div className="flex justify-between items-center px-4 py-3 border-b" style={{borderColor: "var(--border)"}}>
+                      <span className="font-bold text-sm" style={{color: "var(--foreground)"}}>การแจ้งเตือน</span>
                       {unreadCount > 0 && (
                         <button
                           onClick={handleReadAll}
@@ -148,7 +184,8 @@ export default function Navbar() {
                               if (n.postId) router.push(`/posts/${n.postId}`)
                               setShowNotifications(false)
                             }}
-                            className={`px-4 py-3 text-sm border-b border-gray-50 cursor-pointer hover:bg-gray-50 ${!n.isRead ? "bg-indigo-50" : ""}`}
+                            className={`px-4 py-3 text-sm border-b cursor-pointer hover:opacity-80 ${!n.isRead ? "bg-indigo-50" : ""}`}
+                            style={{color: "var(--foreground)", borderColor: "var(--border)"}}
                           >
                             {n.message}
                           </div>
@@ -160,17 +197,18 @@ export default function Navbar() {
               </div>
 
               {/* แสดงชื่อผู้ใช้ — กดแล้วไปหน้าโปรไฟล์ */}
-              <Link
+             <Link
                 href="/profile"
-                className="text-gray-600 text-sm hover:text-indigo-600"
+                className="text-sm hover:text-indigo-400"
+                style={{color: "var(--foreground)"}}
               >
                 👤 {username}
               </Link>
-
               {/* ปุ่ม Logout */}
               <button
-                onClick={handleLogout}  // เมื่อกดปุ่มนี้ จะเรียกฟังก์ชัน handleLogout
-                className="text-gray-500 text-sm hover:text-red-500"
+                onClick={handleLogout}
+                className="text-sm hover:text-red-500"
+                style={{color: "var(--muted)"}}
               >
                 ออกจากระบบ
               </button>
@@ -181,7 +219,8 @@ export default function Navbar() {
               {/* ปุ่ม Login */}
               <Link
                 href="/login"
-                className="text-gray-600 text-sm hover:text-indigo-600"
+                className="text-sm hover:text-indigo-400"
+                style={{color: "var(--foreground)"}}
               >
                 เข้าสู่ระบบ
               </Link>
